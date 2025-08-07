@@ -16,7 +16,7 @@ jobs:
           PR_NUMBER: ${{github.event.pull_request.number}}
           REPO: ${{github.repository}}
         run: |
-          TICKET=$(echo "$PR_TITLE" | grep -oE '^[A-Z]+-[0-9]+')
+          TICKET=$(echo "$PR_TITLE" | grep -oE '^[A-Z]+-[0-9]+') || true
           if [[ -z "$TICKET" ]]; then
             echo "Ticket Number not present in PR title."
             echo "$TICKET"
