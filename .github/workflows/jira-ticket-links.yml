@@ -2,7 +2,7 @@ name: Validate Jira ticket link
 
 on:
   pull_request:
-     types: [opened, edited, sync]
+     types: [opened, edited]
 
 jobs:
   read-pr-title:
@@ -15,7 +15,7 @@ jobs:
           PR_BODY: ${{github.event.pull_request.body}}
           PR_NUMBER: ${{github.event.pull_request.number}}
           REPO: ${{github.repository}}
-        run:
+        run: |
           TICKET=$(echo "$PR_TITLE" | grep -oE '^[A-Z]+-[0-9]+')
           if [[ -z "$TICKET" ]]; then
             echo "Ticket Number not present in PR title."
