@@ -19,6 +19,7 @@ jobs:
           TICKET=$(echo "$PR_TITLE" | grep -oE '^[A-Z]+-[0-9]+')
           if [[ -z "$TICKET" ]]; then
             echo "Ticket Number not present in PR title."
+            echo "$TICKET"
             exit 0
           fi
 
