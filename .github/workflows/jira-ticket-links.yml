@@ -15,7 +15,7 @@ jobs:
           PR_BODY: ${{github.event.pull_request.body}}
           PR_NUMBER: ${{github.event.pull_request.number}}
           REPO: ${{github.repository}}
-        run:
+        run: |
           TICKET=$(echo "$PR_TITLE" | grep -oE '^[A-Z]+-[0-9]+')
           if [[ -z "$TICKET" ]]; then
             echo "Ticket Number not present in PR title."
@@ -28,16 +28,12 @@ jobs:
             exit 0
           fi
 
-          NEW_BODY="$PR_BODY
-          
-          Link to ticket: $JIRA_LINK"
+          NEW_BODY="$PR_BODY Link to ticket: $JIRA_LINK"
           
           API_URL="https://api.github.com/repos/$REPO/pulls/$PR_NUMBER"
           PAYLOAD=$(jq --null-input --arg body "$NEW_BODY" '{body: $body}')
 
-          curl -s -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d "$PAYLOAD" "$API_URL"
+          curl -s -X PATCH -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github.v3+json" -d "$PAYLOAD" "$API_URL"
           echo "Appended JIRA link to PR description."
   
     
