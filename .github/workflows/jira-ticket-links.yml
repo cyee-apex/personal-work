@@ -4,13 +4,16 @@ on:
   pull_request:
      types: [opened, edited]
 
+permissions: 
+  issues: write
+
 jobs:
   read-pr-title:
     runs-on: ubuntu-latest
     steps: 
       - name: Append PR link
         env:
-          GITHUB_TOKEN: ${{ secrets.GHA_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_TITLE: ${{github.event.pull_request.title}}
           PR_BODY: ${{github.event.pull_request.body}}
           PR_NUMBER: ${{github.event.pull_request.number}}
