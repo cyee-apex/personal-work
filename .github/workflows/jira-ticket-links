@@ -1,12 +1,8 @@
 name: Validate Jira ticket link
 
 on:
-  push:
-    branches:
-      - PLT-8474-testing
-      - PLT-8464-*
-  # pull_request:
-  #   types: [opened, edited, sync]
+  pull_request:
+    types: [opened, edited, sync]
 
 jobs:
   read-pr-title:
