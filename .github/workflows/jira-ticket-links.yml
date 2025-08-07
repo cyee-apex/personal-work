@@ -31,7 +31,7 @@ jobs:
 
           NEW_BODY="$PR_BODY
           
-          Link to ticket: $JIRA_LINK"
+          Link to ticket: [$TICKET]($JIRA_LINK)"
           
           API_URL="https://api.github.com/repos/$REPO/pulls/$PR_NUMBER"
           PAYLOAD=$(jq --null-input --arg body "$NEW_BODY" '{body: $body}')
