@@ -10,7 +10,7 @@ jobs:
     steps: 
       - name: Append PR link
         env:
-          GITHUB_TOKEN: ${{ secrets.GHA_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_TITLE: ${{github.event.pull_request.title}}
           PR_BODY: ${{github.event.pull_request.body}}
           PR_NUMBER: ${{github.event.pull_request.number}}
@@ -19,6 +19,7 @@ jobs:
           TICKET=$(echo "$PR_TITLE" | grep -oE '^[A-Z]+-[0-9]+')
           if [[ -z "$TICKET" ]]; then
             echo "Ticket Number not present in PR title."
+            echo "$TICKET"
             exit 0
           fi
 
