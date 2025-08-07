@@ -12,7 +12,7 @@ import (
 
 
 func main() {
-	file, err := os.Open("input.txt")
+	file, err := os.Open("input1.txt")
 	scanner := bufio.NewScanner(file)
 
 	if err != nil{
@@ -42,13 +42,12 @@ func main() {
     // }
 	// fmt.Println(ret)
 	// if err != nil{
-	// 	log.Fatal(err)
+	// 	log.Fatal(err) //for part1
 	// }
-	sort.Ints(s)
-	sort.Reverse(s)
-	fmt.Println(s[0])
-	fmt.Println(s[1])
-	fmt.Println(s[2])
+	
+	sort.Sort(sort.Reverse(sort.IntSlice(s)))
+
+	fmt.Println(s[0] + s[1] + s[2]) //for part2
 
 }
 
