@@ -6,13 +6,19 @@ on:
 
 permissions:
   pull-requests: write
-  issues: write
-  contents: write
 
 jobs:
   read-pr-title:
     runs-on: ubuntu-latest
     steps: 
+      - name: Checkout HEAD
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+      
+      - name: Setup GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
       - name: Append PR link
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -22,10 +28,12 @@ jobs:
           REPO: ${{github.repository}}
           JIRA_LINK: "https://apexclearing.atlassian.net/browse"
         run: |
+          # '[A-Z]+-[0-9]+' matches strings consisting of 1 or more uppercase letters, 
+          # a hyphen (-), and 1 or more numbers, eg. SPIDEY-2099 or PLT-2912
+
           TICKETS=$(echo "$PR_TITLE" | grep -oE '[A-Z]+-[0-9]+' | sort | uniq) || true
           if [[ -z "$TICKETS" ]]; then
             echo "Ticket Number not present in PR title."
-            echo "$TICKET"
             exit 0
           fi
 
@@ -49,16 +57,5 @@ jobs:
 
           $PR_BODY"
           
-          API_URL="https://api.github.com/repos/$REPO/pulls/$PR_NUMBER"
-          PAYLOAD=$(jq --null-input --arg body "$NEW_BODY" '{body: $body}')
-
-          curl -s -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d "$PAYLOAD" "$API_URL"
+          gh pr edit "$PR_NUMBER" --body "$NEW_BODY"
           echo "Appended JIRA link to PR description."
-  
-    
-
-  
-
-
