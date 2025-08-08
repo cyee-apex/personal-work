@@ -32,8 +32,9 @@ jobs:
           MISSING_LINKS=()
           for TICKET in $TICKETS; do
             TICKET_LINK="[$TICKET]($JIRA_LINK/$TICKET)"
-            if ! echo "$PR_BODY" | grep -q "$TICKET_LINK"; then
-              MISSING_LINKS+=("Link to Ticket: $TICKET_LINK")
+            FULL_LINK="Link to Ticket: $TICKET_LINK"
+            if ! echo "$PR_BODY" | grep -q -F "$FULL_LINK"; then
+              MISSING_LINKS+=("$FULL_LINK")
             fi
           done
 
