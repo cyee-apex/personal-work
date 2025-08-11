@@ -1,0 +1,40 @@
+name: Notify proto file changes
+
+on: 
+    pull-request:
+        types: [opened, edited]
+
+permissions: 
+    contents: read
+
+jobs:
+  proto-changes-notification:
+    runs-on: ubuntu-24.04
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      CHANNELS: "#testing-proto-change-notif-wf"
+    steps:
+      - name: Get list of changed .proto files
+        id: proto_files
+        run: |
+          echo "## List PR changes"
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_PROTO=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '\.proto$' || true)
+          echo "changed_files=$CHANGED_PROTO" >> "$GITHUB_OUTPUT"
+
+      - name: Notify Slack if proto files changed
+        if: steps.proto_files.outputs.changed_files != ''
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          CHANGED_FILES="${{ steps.proto_files.outputs.changed_files }}"
+          for CHANNEL in $CHANNELS; do
+            payload="{
+                \"channel\":\"$CHANNEL\",
+                \"text\":\"Proto files changed in PR: <$PR_URL|$PR_TITLE>\nChanged files:\n$CHANGED_FILES\"
+            }"
+            curl -X POST -H 'Content-type: application/json' --data "$payload" $SLACK_WEBHOOK_URL
+          done
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          CHANNELS: ${{ env.CHANNELS }}
