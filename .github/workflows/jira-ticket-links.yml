@@ -4,10 +4,16 @@ on:
   pull_request:
      types: [opened, edited]
 
+permissions:
+  pull-requests: write
+
 jobs:
   read-pr-title:
     runs-on: ubuntu-latest
     steps: 
+      - name: Setup GitHub CLI
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+
       - name: Append PR link
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -15,34 +21,37 @@ jobs:
           PR_BODY: ${{github.event.pull_request.body}}
           PR_NUMBER: ${{github.event.pull_request.number}}
           REPO: ${{github.repository}}
+          JIRA_LINK: "https://apexclearing.atlassian.net/browse"
         run: |
-          TICKET=$(echo "$PR_TITLE" | grep -oE '^[A-Z]+-[0-9]+')
-          if [[ -z "$TICKET" ]]; then
+          # '[A-Z]+-[0-9]+' matches strings consisting of 1 or more uppercase letters, 
+          # a hyphen (-), and 1 or more numbers, eg. SPIDEY-2099 or PLT-2912
+
+          TICKETS=$(echo "$PR_TITLE" | grep -oE '[A-Z]+-[0-9]+' | sort | uniq) || true
+          if [[ -z "$TICKETS" ]]; then
             echo "Ticket Number not present in PR title."
             echo "$TICKET"
             exit 0
           fi
 
-          JIRA_LINK="https://apexclearing.atlassian.net/browse/$TICKET"
-          if echo "$PR_BODY" | grep -q "$JIRA_LINK"; then
-            echo "Ticket '$TICKET' already found in PR description."
+          MISSING_LINKS=()
+          for TICKET in $TICKETS; do
+            TICKET_LINK="[$TICKET]($JIRA_LINK/$TICKET)"
+            FULL_LINK="Link to Ticket: $TICKET_LINK"
+            if ! echo "$PR_BODY" | grep -q -F "$FULL_LINK"; then
+              MISSING_LINKS+=("$FULL_LINK")
+            fi
+          done
+
+          if [[ ${#MISSING_LINKS[@]} -eq 0 ]]; then
+            echo "All tickets already linked in PR description."
             exit 0
           fi
 
-          NEW_BODY="$PR_BODY
-          
-          Link to ticket: $JIRA_LINK"
-          
-          API_URL="https://api.github.com/repos/$REPO/pulls/$PR_NUMBER"
-          PAYLOAD=$(jq --null-input --arg body "$NEW_BODY" '{body: $body}')
+          LINKS_BLOCK=$(printf '%s\n' "${MISSING_LINKS[@]}")
 
-          curl -s -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d "$PAYLOAD" "$API_URL"
+          NEW_BODY="$LINKS_BLOCK
+
+          $PR_BODY"
+          
+          gh pr edit "$PR_NUMBER" --body "$NEW_BODY"
           echo "Appended JIRA link to PR description."
-  
-    
-
-  
-
-
